@@ -1,0 +1,44 @@
+# mkdocs.yml — HRMS México
+# Basado en frappe-infrastructure/docs/templates/mkdocs-base.yml
+#
+# Comandos:
+#   pip install mkdocs mkdocs-material
+#   mkdocs serve          → http://localhost:8000
+#   mkdocs build --strict → falla ante links rotos o archivos en nav inexistentes (requerido en CI)
+#
+# Regla: todo archivo nuevo en docs/ debe agregarse al nav: antes del commit. site/ va en .gitignore.
+
+site_name: "HRMS México"
+site_description: "Cumplimiento laboral mexicano para Frappe HRMS"
+site_author: "Consultoria en Negocios y Aplicaciones"
+docs_dir: docs
+
+nav:
+  - Inicio: index.md
+  - Manual de usuario:
+    - Índice: usuario/index.md
+  - Documentación técnica:
+    - Índice: tecnico/index.md
+    - Arquitectura: tecnico/arquitectura.md
+  - Releases:
+    - Changelog: CHANGELOG.md
+  - Decisiones (ADR):
+    - Índice: adr/index.md
+    - ADR-0000 Estado inicial: adr/0000-estado-inicial-app.md
+
+theme:
+  name: material
+  language: es
+  palette:
+    primary: indigo
+    accent: blue
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - toc.integrate
+
+markdown_extensions:
+  - tables
+  - toc:
+      permalink: true
+  - admonition
