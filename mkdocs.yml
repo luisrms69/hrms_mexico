@@ -25,6 +25,14 @@ nav:
   - Decisiones (ADR):
     - Índice: adr/index.md
     - ADR-0000 Estado inicial: adr/0000-estado-inicial-app.md
+    - ADR-0001 Reutilizar HRMS nativo: adr/0001-estrategia-reutilizar-hrms-nativo.md
+    - ADR-0002 Inmutabilidad del marcaje: adr/0002-inmutabilidad-marcaje-original.md
+    - ADR-0003 Trazabilidad y auditoría: adr/0003-trazabilidad-y-auditoria.md
+    - ADR-0004 MX Attendance Summary: adr/0004-resumen-jornada-mx-attendance-summary.md
+    - ADR-0005 Correcciones (Attendance Request): adr/0005-correcciones-via-attendance-request.md
+    - ADR-0006 MX Attendance Acknowledgement: adr/0006-acuse-empleado-mx-attendance-acknowledgement.md
+    - ADR-0007 Cumplimiento normativo MX: adr/0007-cumplimiento-normativo-mx.md
+    - ADR-0008 Criptografía fuera de alcance: adr/0008-criptografia-fuera-de-alcance-inicial.md
 
 theme:
   name: material
