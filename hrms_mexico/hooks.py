@@ -155,6 +155,29 @@ required_apps = ["erpnext", "hrms"]
 # 	"Event": "frappe.desk.doctype.event.event.has_permission",
 # }
 
+# ADR-0002 — el rol Employee no puede `write`/`delete` marcajes originales (conserva `create`).
+has_permission = {
+	"Employee Checkin": "hrms_mexico.overrides.employee_checkin.has_permission",
+}
+
+# Fixtures versionados — Property Setters de inmutabilidad (set_only_once) del marcaje original.
+fixtures = [
+	{
+		"dt": "Property Setter",
+		"filters": [
+			[
+				"name",
+				"in",
+				[
+					"Employee Checkin-employee-set_only_once",
+					"Employee Checkin-time-set_only_once",
+					"Employee Checkin-log_type-set_only_once",
+				],
+			]
+		],
+	}
+]
+
 # Document Events
 # ---------------
 # Hook on document methods and events
@@ -166,6 +189,14 @@ required_apps = ["erpnext", "hrms"]
 # 		"on_trash": "method"
 # 	}
 # }
+
+# ADR-0002 — inmutabilidad de la evidencia del marcaje original (Employee Checkin).
+doc_events = {
+	"Employee Checkin": {
+		"validate": "hrms_mexico.overrides.employee_checkin.protect_evidence",
+		"on_trash": "hrms_mexico.overrides.employee_checkin.block_delete",
+	}
+}
 
 # Scheduled Tasks
 # ---------------
@@ -192,6 +223,9 @@ required_apps = ["erpnext", "hrms"]
 # -------
 
 # before_tests = "hrms_mexico.install.before_tests"
+
+# Bootstrap de tests: crea `_Test Company` + setup (vía setup wizard) si la BD está limpia (p. ej. CI).
+before_tests = "hrms_mexico.tests.bootstrap.before_tests"
 
 # Extend DocType Class
 # ------------------------------

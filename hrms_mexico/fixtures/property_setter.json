@@ -1,0 +1,38 @@
+[
+ {
+  "doctype": "Property Setter",
+  "name": "Employee Checkin-employee-set_only_once",
+  "is_system_generated": 0,
+  "doctype_or_field": "DocField",
+  "doc_type": "Employee Checkin",
+  "field_name": "employee",
+  "property": "set_only_once",
+  "property_type": "Check",
+  "value": "1",
+  "module": "HRMS Mexico"
+ },
+ {
+  "doctype": "Property Setter",
+  "name": "Employee Checkin-time-set_only_once",
+  "is_system_generated": 0,
+  "doctype_or_field": "DocField",
+  "doc_type": "Employee Checkin",
+  "field_name": "time",
+  "property": "set_only_once",
+  "property_type": "Check",
+  "value": "1",
+  "module": "HRMS Mexico"
+ },
+ {
+  "doctype": "Property Setter",
+  "name": "Employee Checkin-log_type-set_only_once",
+  "is_system_generated": 0,
+  "doctype_or_field": "DocField",
+  "doc_type": "Employee Checkin",
+  "field_name": "log_type",
+  "property": "set_only_once",
+  "property_type": "Check",
+  "value": "1",
+  "module": "HRMS Mexico"
+ }
+]
