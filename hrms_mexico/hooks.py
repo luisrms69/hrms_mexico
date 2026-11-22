@@ -224,6 +224,9 @@ doc_events = {
 
 # before_tests = "hrms_mexico.install.before_tests"
 
+# Bootstrap de tests: crea `_Test Company` + setup (vía setup wizard) si la BD está limpia (p. ej. CI).
+before_tests = "hrms_mexico.tests.bootstrap.before_tests"
+
 # Extend DocType Class
 # ------------------------------
 #
