@@ -56,3 +56,6 @@ jspm_packages/
 
 # MkDocs build output
 site/
+
+# Scripts temporales / de demostración — no se versionan (regla del ecosistema)
+one_offs/

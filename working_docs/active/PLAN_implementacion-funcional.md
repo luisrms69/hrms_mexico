@@ -50,6 +50,14 @@
 - **Pruebas:** crear checkin y verificar que editar `time`/`log_type` o borrarlo falla para todos los roles; verificar que auto-attendance/scheduler sí pueden actualizar campos técnicos; verificar que cancelar `Attendance` no habilita editar el checkin.
 
 ### Etapa 2 — Registro y consolidación
+
+> **Estado de cierre (actualizado):**
+> - **Implementación técnica: TERMINADA** (`MX Attendance Summary` + child + controller + UI + seam).
+> - **Pruebas automatizadas: APROBADAS (20/20** en la última ejecución: 10 de Etapa 2 + 10 de Etapa 1, sin regresión).
+> - **Validación funcional y de experiencia de usuario: PENDIENTE.** La revisión del empleado/RR. HH. (pantallas, operación, claridad) **no** está aprobada.
+> - **La integración del código NO representa aceptación funcional.** El código se integra para conservarlo y versionarlo; la aprobación funcional es un paso posterior e independiente.
+> - Los ajustes detectados en la prueba del empleado permanecen en el **inventario F01–F06** (abajo); F01 (alertas) se implementa en Etapa 3.
+
 - **Objetivo:** aprovechar marcajes nativos y **generar resúmenes de jornada**.
 - **Nativo:** `Employee Checkin` + `Shift Type` (auto-attendance) → `Attendance`.
 - **Propio:** `MX Attendance Summary` (DocType **submittable**): consolida por empleado/día/periodo (pares IN/OUT, horas nativas, minutos reconocidos, extras, incidencias, parámetros) **sin alterar** el original; recálculo **idempotente**; al *submit* **congela el snapshot** + PDF. Aplica la **regla de sustitución** (ADR-0005): los minutos reconocidos **sustituyen** (no suman) a `working_hours`.
@@ -64,7 +72,7 @@
 ### Etapa 3 — Correcciones y excepciones
 - **Objetivo:** solicitudes, justificaciones, aprobaciones y **conservación de evidencia**.
 - **Nativo:** `Attendance Request` (una fecha por solicitud) para regularización/omisiones; `Leave Application` (ausencias); `Overtime Slip` (horas extra); workflow de aprobación nativo.
-- **Propio:** Custom Fields en `Attendance Request` (motivo/categoría MX, evidencia, autorizador); vínculo de la corrección aprobada con el `MX Attendance Summary`. **Sin** DocType de corrección propio.
+- **Propio:** Custom Fields en `Attendance Request` (motivo/categoría MX, evidencia, autorizador); vínculo de la corrección aprobada con el `MX Attendance Summary`; **alertas por jornada abierta fuera de horario (F01)** vía `scheduler_events` nativo + parámetros en `MX Attendance Settings` (Single). **Sin** DocType de corrección propio. **Sin** OUT ficticios ni modificación de evidencia.
 - **Depende de:** Etapas 1, 2.
 - **Criterios de aceptación:**
   - Una omisión/error se corrige vía `Attendance Request` aprobado **sin** modificar el checkin original.
@@ -127,6 +135,61 @@
 - **Persistencia tras `cancel`/`amend`:** validar que el resumen anterior y su acuse se conservan tras rectificación/cancelación y restauración (ADR-0004).
 - **Trabajadores sin portal:** definir canal de puesta a disposición y acuse (operativo/legal — pendiente).
 - **Alcance de `MX Attendance Summary`:** granularidad (día/periodo) y campos exactos a cerrar al diseñar el DocType (ADR-0004).
+
+## Inventario de ajustes — revisión funcional Etapa 2
+
+Detectados durante la prueba real del empleado (no reabre la arquitectura aprobada). Fuente de la
+viabilidad: investigación del nativo HRMS v16 (frontend PWA `apps/hrms/frontend` y `employee_checkin`).
+
+| ID | Requerimiento | Situación | Viabilidad no-invasiva |
+|---|---|---|---|
+| F01 | Jornada con salida olvidada | Diseño aprobado para revisión | No se altera la PWA (frontend HRMS). Solución: **alertas por jornada abierta fuera de horario** con capacidades nativas (ver «Diseño F01 — alertas»). No fuerza OUT ni modifica evidencia. Implementación: **Etapa 3**. |
+| F02 | Cuatro marcajes incluyendo comida | Validación funcional | **OK, ya soportado**: `MX Attendance Summary` consolida múltiples pares IN/OUT (comida) y suma los dos periodos (test `test_multiple_pairs`). Sin campos nuevos. |
+| F03 | Geolocalización | Resuelto; verificar conservación | **Verificado**: `hrms_mexico` no referencia `latitude`/`longitude`/`geolocation`; no las lee ni modifica. Se conservan intactas. |
+| F04 | Mostrar/ocultar enlaces rápidos individualmente | **Decidido: no implementar** | Los *quick links* están hardcodeados en el frontend HRMS. Decisión: **conservar todos los enlaces nativos**, sin configuración de visibilidad y sin intervenir el núcleo. |
+| F05 | Regularización mediante Attendance Request | Etapa 3 | Fuera de alcance de Etapa 2 (seam listo en `recognition.py`). |
+| F06 | «Solicitar un turno» | **Decidido: mantener visible** | Permanece visible; su utilización depende de los permisos del usuario. No se modifica el frontend ni las traducciones. |
+
+**Limitación central (frontend HRMS):** la pantalla de autoservicio es una SPA Vue compilada que HRMS
+sirve en `/hrms`; sus accesos (*quick links*) y la lógica IN/OUT no son configurables ni sobrescribibles
+desde una app externa sin modificar el código/build de HRMS. **Decisión del usuario:** no intervenir el
+frontend — se conservan todos los enlaces nativos (incluido «Solicitar un turno», cuyo uso depende de
+permisos) y F01 se atiende por **alertas** (abajo), no por cambios en la PWA.
+
+### Diseño F01 — alertas por jornada abierta fuera de horario
+
+> **Estado: diseño para revisión (no implementado).** Implementación prevista en **Etapa 3**
+> (acompaña la regularización por `Attendance Request`). Usa **solo** capacidades nativas; no crea OUT
+> ficticios ni modifica evidencia.
+
+**Qué detecta.** Una jornada con `IN` sin `OUT` cuyo turno **ya terminó** más una **tolerancia
+configurable**. El marcaje original queda intacto; la alerta es informativa y conduce a la regularización
+(Etapa 3), nunca a un cierre automático.
+
+**Disparo de cada notificación (niveles, con anti-duplicado por `employee + shift_start + fecha`):**
+- **N0 — Aviso al empleado:** cuando `ahora ≥ shift_end + tolerancia` y la jornada sigue abierta. Una sola
+  vez por jornada.
+- **N1 — Destinatario adicional (opcional):** mismo disparo que N0, en copia, si se configuró (supervisor
+  `Reports To` / responsable RR. HH. / usuario designado).
+- **N2 — Escalamiento:** si tras `horas_escalamiento` la jornada **sigue abierta** y **no** hay
+  `Attendance Request` asociado, se notifica al responsable. Una sola vez por jornada.
+- **Cese:** aparece un `OUT`, o se crea/aprueba un `Attendance Request` (Etapa 3), o se resuelve la
+  jornada → no se envían más alertas.
+
+**No dispara en:** jornadas aún dentro de turno (Abiertas legítimas), días sin marcajes, días de
+descanso / sin turno asignado (no hay `shift_end` de referencia). Turnos nocturnos: se usa el `shift_end`
+real (cruza medianoche), por lo que la alerta ocurre tras el fin real del turno + tolerancia.
+
+**Parámetros mínimos (en `MX Attendance Settings`, Single — previsto; aún no creado):**
+`alerta_activa` (on/off) · `tolerancia_minutos` (p. ej. 120) · `frecuencia_revision` (hourly) ·
+`destinatario_adicional` (ninguno | supervisor `Reports To` | responsable RR. HH. | usuario) ·
+`escalamiento_activo` (on/off) · `horas_escalamiento` (p. ej. 4) · `escalar_a` (supervisor | RR. HH. | usuario).
+
+**Componentes nativos reutilizables:** `scheduler_events` (hook `hourly`) para la detección; **Notification
+Log** / correo (`frappe.sendmail`/Notification) para el aviso in-app + email; **ToDo / `assign_to`** para
+dejar la jornada abierta asignada y rastreable (y medir "no atendida"); `Employee.reports_to` para el
+supervisor; dedupe con un identificador idempotente por jornada. **Sin DocTypes nuevos salvo** el Single
+`MX Attendance Settings` (parámetros) cuando se implemente.
 
 ## Mapa ADR → etapa
 
