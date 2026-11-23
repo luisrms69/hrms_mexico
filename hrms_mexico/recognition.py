@@ -3,16 +3,15 @@
 
 """Seam de "minutos reconocidos" (ADR-0004 / ADR-0005).
 
-La **regla de sustitución** (ADR-0005) dice que, cuando una jornada tiene minutos reconocidos por una
-corrección aprobada, esos minutos **sustituyen** (no suman) a las horas calculadas por HRMS en el
-resumen de jornada (`MX Attendance Summary`).
+La **regla de sustitución** (ADR-0005): cuando una jornada tiene minutos reconocidos por una
+regularización **aprobada**, esos minutos **sustituyen** (no suman) a las horas calculadas por HRMS en
+el resumen de jornada (`MX Attendance Summary`).
 
-En la **Etapa 2** aquí vive únicamente el *punto de extensión* (seam): `recognized_minutes_for`
-devuelve ``None`` (no hay minutos reconocidos). La **fuente real** —Custom Fields en `Attendance
-Request` aprobado— se cablea en la **Etapa 3** reemplazando el cuerpo de esta función, sin tocar el
-consumidor (`MX Attendance Summary`).
+**Fuente (Etapa 3):** un `Attendance Request` **aprobado** (`docstatus == 1`) con **categoría MX**
+(`custom_mx_categoria`) que cubra la fecha; sus `custom_mx_minutos_reconocidos` son los minutos
+reconocidos. Una solicitud sin categoría MX (p. ej. WFH/On Duty nativo) **no** aplica sustitución.
 
-No se persisten datos simulados: los tests inyectan minutos reconocidos monkeypatcheando esta función.
+El consumidor (`MX Attendance Summary`) no cambia: solo llama a `recognized_minutes_for`.
 """
 
 import frappe
@@ -21,13 +20,24 @@ import frappe
 def recognized_minutes_for(employee: str, date) -> int | None:
 	"""Minutos de jornada reconocidos para `employee` en `date`, o ``None`` si no hay.
 
-	Contrato (estable para la Etapa 3):
-	- ``None``  → no hay reconocimiento; el resumen usa las horas nativas de HRMS.
-	- ``int``   → minutos reconocidos; **sustituyen** (no suman) a las horas nativas.
-
-	Etapa 2: siempre ``None`` (la fuente `Attendance Request` llega en la Etapa 3).
+	Contrato:
+	- ``None``  → no hay regularización MX; el resumen usa las horas nativas de HRMS.
+	- ``int``   → minutos reconocidos por una regularización MX aprobada; **sustituyen** (no suman).
 	"""
-	# Etapa 3 (ADR-0005): consultar aquí el/los `Attendance Request` aprobado(s) de ese empleado/fecha
-	# y devolver los minutos reconocidos. Hasta entonces, no hay reconocimiento.
-	del employee, date  # sin uso en la Etapa 2; se documentan para la firma estable
+	rows = frappe.get_all(
+		"Attendance Request",
+		filters={
+			"employee": employee,
+			"docstatus": 1,
+			"from_date": ("<=", date),
+			"to_date": (">=", date),
+		},
+		fields=["custom_mx_categoria", "custom_mx_minutos_reconocidos"],
+		order_by="modified desc",
+	)
+	for r in rows:
+		# Solo las regularizaciones MX (con categoría) aplican sustitución; el valor puede ser 0
+		# (p. ej. jornada reconocida sin tiempo computable), lo cual también sustituye.
+		if r.get("custom_mx_categoria"):
+			return int(r.get("custom_mx_minutos_reconocidos") or 0)
 	return None

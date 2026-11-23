@@ -10,5 +10,14 @@ frappe.ui.form.on("MX Attendance Summary", {
 				frm.call("rebuild").then(() => frm.reload_doc());
 			});
 		}
+		// Rectificar un resumen confirmado: crea un documento NUEVO e independiente (no cancela ni
+		// enmienda este). El original permanece confirmado e intacto.
+		if (frm.doc.docstatus === 1) {
+			frm.add_custom_button(__("Rectificar"), () => {
+				frm.call("create_rectification").then((r) => {
+					if (r.message) frappe.set_route("Form", "MX Attendance Summary", r.message);
+				});
+			});
+		}
 	},
 });

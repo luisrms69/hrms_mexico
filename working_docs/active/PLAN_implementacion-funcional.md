@@ -70,6 +70,13 @@
 - **Decisión pendiente (sincronización / falso Absent):** un IN sin OUT puede generar `Attendance` `Absent` (`working_hours=0`). v0.3 §4 propone control de `last_sync_of_checkin`; se requiere **control de liberación por turno/periodo** para incidencias abiertas (a diseñar/ensayar — ver Riesgos).
 
 ### Etapa 3 — Correcciones y excepciones
+
+> **Estado de cierre (actualizado):**
+> - **Implementación técnica: TERMINADA** (regularización vía `Attendance Request` MX + reconocimiento/sustitución, inmutabilidad del resumen confirmado con rectificación independiente, y alertas F01).
+> - **Pruebas automatizadas: APROBADAS (42/42** en la última ejecución: Etapas 1+2+3, sin regresión).
+> - **Validación funcional y de experiencia de usuario de las Etapas 2 y 3: PENDIENTE.** La revisión del empleado/RR. HH. (pantallas, operación, claridad de reglas y alertas) **no** está aprobada.
+> - **La integración del código NO representa aceptación funcional** de ninguna de las dos etapas; es cierre técnico para continuar la actualización del bench.
+
 - **Objetivo:** solicitudes, justificaciones, aprobaciones y **conservación de evidencia**.
 - **Nativo:** `Attendance Request` (una fecha por solicitud) para regularización/omisiones; `Leave Application` (ausencias); `Overtime Slip` (horas extra); workflow de aprobación nativo.
 - **Propio:** Custom Fields en `Attendance Request` (motivo/categoría MX, evidencia, autorizador); vínculo de la corrección aprobada con el `MX Attendance Summary`; **alertas por jornada abierta fuera de horario (F01)** vía `scheduler_events` nativo + parámetros en `MX Attendance Settings` (Single). **Sin** DocType de corrección propio. **Sin** OUT ficticios ni modificación de evidencia.
@@ -132,7 +139,7 @@
 - **Liberación de sincronización / falso Absent (v0.3 §4):** definir y ensayar el control por turno/periodo para incidencias abiertas; evitar `Absent` indebido y no bloquear a todos por una omisión.
 - **Extras por minutos reconocidos (R4):** brecha funcional pendiente (cancel/amend de `Attendance` probado) antes de declarar integrado el pago de extras por salida omitida.
 - **Solicitudes multifecha:** confirmado **una fecha por solicitud** salvo que se valide asignación inequívoca de minutos por jornada (ADR-0005).
-- **Persistencia tras `cancel`/`amend`:** validar que el resumen anterior y su acuse se conservan tras rectificación/cancelación y restauración (ADR-0004).
+- **Rectificación de documentos de evidencia (decisión definitiva):** en `MX Attendance Summary` (y el futuro `MX Attendance Acknowledgement`) **está PROHIBIDO** `cancel`/`amend`/modificación posterior al *submit* (incl. `allow_on_submit`) y cambios directos de `docstatus`. Una rectificación es un **documento NUEVO e independiente** con referencia (`rectifica_a`) al anterior; el original conserva `docstatus=1`, su contenido y su evidencia. Protección por permisos (`cancel`/`amend`/`delete` deshabilitados) + guard `before_cancel`, sin tocar el núcleo (ver ADR-0004).
 - **Trabajadores sin portal:** definir canal de puesta a disposición y acuse (operativo/legal — pendiente).
 - **Alcance de `MX Attendance Summary`:** granularidad (día/periodo) y campos exactos a cerrar al diseñar el DocType (ADR-0004).
 
