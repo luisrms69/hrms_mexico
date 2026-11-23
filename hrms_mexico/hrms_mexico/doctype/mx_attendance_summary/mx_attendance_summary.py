@@ -39,10 +39,72 @@ _DEFAULT_CALC_TYPE = "Every Valid Check-in and Check-out"
 
 class MXAttendanceSummary(Document):
 	def validate(self):
+		self._block_amend()
+		self._validate_rectification()
 		self._validate_period()
 		# El snapshot solo se (re)construye mientras el documento está en borrador.
 		if self.docstatus == 0:
 			self.build()
+
+	def _validate_rectification(self):
+		"""La referencia de rectificación debe ser inequívoca: a un resumen confirmado existente, distinto."""
+		if not self.rectifica_a:
+			return
+		if self.rectifica_a == self.name:
+			frappe.throw(_("Una rectificación no puede referenciarse a sí misma."), title=_("Rectificación"))
+		target = frappe.db.get_value("MX Attendance Summary", self.rectifica_a, "docstatus")
+		if target is None:
+			frappe.throw(_("El resumen que se rectifica no existe."), title=_("Rectificación"))
+		if target != 1:
+			frappe.throw(
+				_("Solo se rectifica un resumen confirmado (docstatus=1)."), title=_("Rectificación")
+			)
+
+	def _block_amend(self):
+		"""El resumen confirmado es evidencia: no se enmienda (amend). La rectificación es un documento
+		NUEVO e independiente (ver `create_rectification`); el original conserva docstatus=1."""
+		if self.get("amended_from"):
+			frappe.throw(
+				_(
+					"El resumen de jornada no admite enmienda (amend). Genere una rectificación: un documento"
+					" nuevo e independiente que referencia al anterior, el cual se conserva intacto."
+				),
+				title=_("Enmienda no permitida"),
+			)
+
+	def before_cancel(self):
+		"""Prohibido cancelar un resumen confirmado (evidencia). Aplica a todos los roles, incluido
+		Administrator (los permisos por rol no bastan porque Administrator los omite)."""
+		frappe.throw(
+			_(
+				"El resumen de jornada confirmado no puede cancelarse: es evidencia. Para corregir, genere"
+				" una rectificación (documento nuevo que referencia a este); el original permanece confirmado."
+			),
+			title=_("Cancelación no permitida"),
+		)
+
+	@frappe.whitelist()
+	def create_rectification(self):
+		"""Crea un resumen NUEVO e independiente (borrador) que rectifica a este, sin tocar el original.
+
+		El nuevo documento referencia al anterior vía `rectifica_a`; reconstruye su detalle con la
+		información vigente (p. ej. regularizaciones aprobadas). El original conserva su `docstatus=1`,
+		su contenido y su evidencia.
+		"""
+		if self.docstatus != 1:
+			frappe.throw(_("Solo se rectifica un resumen confirmado."), title=_("Rectificación"))
+		nuevo = frappe.get_doc(
+			{
+				"doctype": "MX Attendance Summary",
+				"employee": self.employee,
+				"period_start": self.period_start,
+				"period_end": self.period_end,
+				"shift_type": self.shift_type,
+				"rectifica_a": self.name,
+			}
+		)
+		nuevo.insert()
+		return nuevo.name
 
 	def _validate_period(self):
 		if not (self.period_start and self.period_end):

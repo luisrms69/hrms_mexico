@@ -29,7 +29,7 @@
   "days_no_checkin",
   "section_break_detalle",
   "days",
-  "amended_from"
+  "rectifica_a"
  ],
  "fields": [
   {
@@ -184,9 +184,10 @@
    "read_only": 1
   },
   {
-   "fieldname": "amended_from",
+   "description": "Resumen confirmado que esta rectificación reemplaza. El original se conserva intacto (docstatus=1); nunca se cancela ni se enmienda.",
+   "fieldname": "rectifica_a",
    "fieldtype": "Link",
-   "label": "Enmienda de",
+   "label": "Rectifica a",
    "no_copy": 1,
    "options": "MX Attendance Summary",
    "print_hide": 1,
@@ -202,10 +203,7 @@
  "owner": "Administrator",
  "permissions": [
   {
-   "amend": 1,
-   "cancel": 1,
    "create": 1,
-   "delete": 1,
    "email": 1,
    "export": 1,
    "print": 1,
@@ -217,10 +215,7 @@
    "write": 1
   },
   {
-   "amend": 1,
-   "cancel": 1,
    "create": 1,
-   "delete": 1,
    "email": 1,
    "export": 1,
    "print": 1,

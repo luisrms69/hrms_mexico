@@ -160,7 +160,8 @@ has_permission = {
 	"Employee Checkin": "hrms_mexico.overrides.employee_checkin.has_permission",
 }
 
-# Fixtures versionados — Property Setters de inmutabilidad (set_only_once) del marcaje original.
+# Fixtures versionados — Property Setters de inmutabilidad (set_only_once) del marcaje original
+# y Custom Fields MX de regularización en Attendance Request (Etapa 3).
 fixtures = [
 	{
 		"dt": "Property Setter",
@@ -175,7 +176,24 @@ fixtures = [
 				],
 			]
 		],
-	}
+	},
+	{
+		"dt": "Custom Field",
+		"filters": [
+			[
+				"name",
+				"in",
+				[
+					"Attendance Request-custom_mx_regularizacion_section",
+					"Attendance Request-custom_mx_categoria",
+					"Attendance Request-custom_mx_minutos_reconocidos",
+					"Attendance Request-custom_mx_column_break",
+					"Attendance Request-custom_mx_evidencia",
+					"Attendance Request-custom_mx_autorizador",
+				],
+			]
+		],
+	},
 ]
 
 # Document Events
@@ -191,33 +209,27 @@ fixtures = [
 # }
 
 # ADR-0002 — inmutabilidad de la evidencia del marcaje original (Employee Checkin).
+# ADR-0005 (Etapa 3) — reglas de regularización MX sobre Attendance Request nativo.
 doc_events = {
 	"Employee Checkin": {
 		"validate": "hrms_mexico.overrides.employee_checkin.protect_evidence",
 		"on_trash": "hrms_mexico.overrides.employee_checkin.block_delete",
-	}
+	},
+	"Attendance Request": {
+		"validate": "hrms_mexico.overrides.attendance_request.validate",
+		"before_submit": "hrms_mexico.overrides.attendance_request.before_submit",
+	},
 }
 
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"hrms_mexico.tasks.all"
-# 	],
-# 	"daily": [
-# 		"hrms_mexico.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"hrms_mexico.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"hrms_mexico.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"hrms_mexico.tasks.monthly"
-# 	],
-# }
+# F01 (Etapa 3) — alertas por jornada abierta (salida olvidada). Cada hora.
+scheduler_events = {
+	"hourly": [
+		"hrms_mexico.alerts.check_open_journeys",
+	],
+}
 
 # Testing
 # -------

@@ -19,8 +19,18 @@ Es **submittable**: al hacer *submit* se **congela el snapshot** del periodo (fi
 
 - Es una capa derivada/solo-consolidación; nunca modifica checkins ni evidencia.
 - Refleja las correcciones aprobadas (ver ADR-0005) y alimenta consulta/acuse (ADR-0006) y reportes (Etapa 5).
-- **Rectificación histórica:** una revisión posterior al cierre genera un **resumen complementario/enmendado (nueva versión)**, conservando el anterior **y su respuesta**; `cancel`/`amend` no deben borrar evidencia aceptada (comportamiento a validar).
+- **Rectificación histórica:** una revisión posterior al cierre genera un **documento NUEVO e independiente** (`MX Attendance Summary`) que **referencia** al anterior mediante `rectifica_a`. El resumen original **conserva `docstatus=1`**, su contenido y su evidencia **intactos**; no se toca.
 - La granularidad exacta (día/periodo) y los campos se cierran al diseñar el DocType.
+
+### Prohibición — sin `cancel`/`amend` sobre el resumen confirmado (decisión definitiva)
+
+El `MX Attendance Summary` confirmado es **evidencia**. Para corregirlo **está PROHIBIDO**: `Document.cancel()`,
+el mecanismo nativo **Amend**/`amended_from`, cualquier modificación posterior al *submit* (incluidos campos
+`allow_on_submit`), y cambios directos de `docstatus` para cancelar/sustituir el documento. La **única** vía de
+corrección es la **rectificación**: un **documento nuevo e independiente** con referencia (`rectifica_a`) al
+original, que permanece confirmado. Protección por metadata (permisos `cancel`/`amend`/`delete` deshabilitados)
+y por guard de controlador (`before_cancel`), **sin** modificar el núcleo de Frappe/HRMS. Esta prohibición
+aplica igualmente a `MX Attendance Acknowledgement` (ADR-0006).
 
 ## Notas
 

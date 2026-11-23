@@ -1,0 +1,73 @@
+[
+ {
+  "docstatus": 0,
+  "doctype": "Custom Field",
+  "dt": "Attendance Request",
+  "fieldname": "custom_mx_regularizacion_section",
+  "fieldtype": "Section Break",
+  "insert_after": "explanation",
+  "label": "Regularización (México)",
+  "module": "HRMS Mexico",
+  "name": "Attendance Request-custom_mx_regularizacion_section"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Custom Field",
+  "dt": "Attendance Request",
+  "fieldname": "custom_mx_categoria",
+  "fieldtype": "Select",
+  "insert_after": "custom_mx_regularizacion_section",
+  "label": "Categoría (México)",
+  "module": "HRMS Mexico",
+  "name": "Attendance Request-custom_mx_categoria",
+  "options": "\nSalida olvidada\nEntrada olvidada\nError de marcaje\nOmisión de marcaje\nOtro"
+ },
+ {
+  "description": "Minutos de jornada reconocidos por RR. HH. Sustituyen (no suman) las horas calculadas en el resumen.",
+  "docstatus": 0,
+  "doctype": "Custom Field",
+  "dt": "Attendance Request",
+  "fieldname": "custom_mx_minutos_reconocidos",
+  "fieldtype": "Int",
+  "insert_after": "custom_mx_categoria",
+  "label": "Minutos reconocidos",
+  "module": "HRMS Mexico",
+  "name": "Attendance Request-custom_mx_minutos_reconocidos"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Custom Field",
+  "dt": "Attendance Request",
+  "fieldname": "custom_mx_column_break",
+  "fieldtype": "Column Break",
+  "insert_after": "custom_mx_minutos_reconocidos",
+  "module": "HRMS Mexico",
+  "name": "Attendance Request-custom_mx_column_break"
+ },
+ {
+  "description": "Documento de respaldo de la regularización (opcional).",
+  "docstatus": 0,
+  "doctype": "Custom Field",
+  "dt": "Attendance Request",
+  "fieldname": "custom_mx_evidencia",
+  "fieldtype": "Attach",
+  "insert_after": "custom_mx_column_break",
+  "label": "Evidencia",
+  "module": "HRMS Mexico",
+  "name": "Attendance Request-custom_mx_evidencia"
+ },
+ {
+  "description": "Usuario que aprobó la regularización. Se registra automáticamente al aprobar.",
+  "docstatus": 0,
+  "doctype": "Custom Field",
+  "dt": "Attendance Request",
+  "fieldname": "custom_mx_autorizador",
+  "fieldtype": "Link",
+  "insert_after": "custom_mx_evidencia",
+  "label": "Autorizador",
+  "module": "HRMS Mexico",
+  "name": "Attendance Request-custom_mx_autorizador",
+  "options": "User",
+  "read_only": 1
+ }
+]

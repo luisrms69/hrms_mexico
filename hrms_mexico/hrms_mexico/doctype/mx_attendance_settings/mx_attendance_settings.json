@@ -1,0 +1,135 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-11-23 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_alertas",
+  "alerta_activa",
+  "tolerancia_minutos",
+  "column_break_dest",
+  "destinatario_adicional",
+  "responsable_rrhh",
+  "usuario_designado",
+  "section_escalamiento",
+  "escalamiento_activo",
+  "horas_escalamiento",
+  "column_break_esc",
+  "escalar_a",
+  "usuario_escalamiento"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_alertas",
+   "fieldtype": "Section Break",
+   "label": "Alertas por jornada abierta (salida olvidada)"
+  },
+  {
+   "default": "0",
+   "description": "Activa la detección y aviso de jornadas con entrada sin salida tras el fin de turno.",
+   "fieldname": "alerta_activa",
+   "fieldtype": "Check",
+   "label": "Alertas activas"
+  },
+  {
+   "default": "120",
+   "description": "Minutos de tolerancia tras el fin del turno antes de avisar.",
+   "fieldname": "tolerancia_minutos",
+   "fieldtype": "Int",
+   "label": "Tolerancia (minutos)"
+  },
+  {
+   "fieldname": "column_break_dest",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Ninguno",
+   "fieldname": "destinatario_adicional",
+   "fieldtype": "Select",
+   "label": "Destinatario adicional del aviso",
+   "options": "Ninguno\nSupervisor (Reports To)\nResponsable de RR. HH.\nUsuario designado"
+  },
+  {
+   "depends_on": "eval:doc.destinatario_adicional==\"Responsable de RR. HH.\" || doc.escalar_a==\"Responsable de RR. HH.\"",
+   "fieldname": "responsable_rrhh",
+   "fieldtype": "Link",
+   "label": "Responsable de RR. HH.",
+   "options": "User"
+  },
+  {
+   "depends_on": "eval:doc.destinatario_adicional==\"Usuario designado\"",
+   "fieldname": "usuario_designado",
+   "fieldtype": "Link",
+   "label": "Usuario designado (aviso)",
+   "options": "User"
+  },
+  {
+   "fieldname": "section_escalamiento",
+   "fieldtype": "Section Break",
+   "label": "Escalamiento"
+  },
+  {
+   "default": "0",
+   "description": "Si la incidencia sigue sin atenderse, notifica al responsable.",
+   "fieldname": "escalamiento_activo",
+   "fieldtype": "Check",
+   "label": "Escalamiento activo"
+  },
+  {
+   "default": "4",
+   "description": "Horas tras el primer aviso, sin resolución ni regularización, para escalar.",
+   "fieldname": "horas_escalamiento",
+   "fieldtype": "Int",
+   "label": "Horas para escalar"
+  },
+  {
+   "fieldname": "column_break_esc",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Supervisor (Reports To)",
+   "fieldname": "escalar_a",
+   "fieldtype": "Select",
+   "label": "Escalar a",
+   "options": "Supervisor (Reports To)\nResponsable de RR. HH.\nUsuario designado"
+  },
+  {
+   "depends_on": "eval:doc.escalar_a==\"Usuario designado\"",
+   "fieldname": "usuario_escalamiento",
+   "fieldtype": "Link",
+   "label": "Usuario designado (escalamiento)",
+   "options": "User"
+  }
+ ],
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-11-23 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HRMS Mexico",
+ "name": "MX Attendance Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

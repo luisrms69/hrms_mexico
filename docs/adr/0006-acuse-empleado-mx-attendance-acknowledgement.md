@@ -17,7 +17,8 @@ Crear el DocType propio **`MX Attendance Acknowledgement`** para que el empleado
 
 - El empleado consulta sus jornadas/estadísticas (aislado a sus propios registros vía User Permission) y emite acuse.
 - El acuse es evidencia adicional; **no** modifica el marcaje ni el summary.
-- Un **desacuerdo** (Inconforme) se atiende por `Attendance Request` (ADR-0005) y se emite una **nueva versión** del resumen (ADR-0004), conservando el acuse anterior.
+- Un **desacuerdo** (Inconforme) se atiende por `Attendance Request` (ADR-0005) y se genera un **nuevo resumen independiente** (ADR-0004, rectificación con `rectifica_a`), **sin** `cancel`/`amend`: el resumen y el acuse anteriores **se conservan intactos** (`docstatus=1`).
+- **Sin `cancel`/`amend` del acuse:** igual que el resumen (ADR-0004), el `MX Attendance Acknowledgement` confirmado es evidencia; no se cancela, enmienda ni modifica tras el *submit*. Una corrección es un documento nuevo que referencia al anterior.
 
 ## Notas
 
