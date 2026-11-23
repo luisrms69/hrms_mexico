@@ -1,0 +1,251 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "naming_series:",
+ "creation": "2026-11-22 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "employee",
+  "employee_name",
+  "company",
+  "column_break_periodo",
+  "period_start",
+  "period_end",
+  "shift_type",
+  "section_break_parametros",
+  "applied_check_in_out_type",
+  "column_break_parametros",
+  "applied_calc_type",
+  "section_break_totales",
+  "total_native_hours",
+  "total_computed_hours",
+  "total_recognized_minutes",
+  "column_break_totales",
+  "days_complete",
+  "days_open",
+  "days_incomplete",
+  "days_no_checkin",
+  "section_break_detalle",
+  "days",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "default": "MXAS-.YYYY.-.#####",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Serie",
+   "no_copy": 1,
+   "options": "MXAS-.YYYY.-.#####",
+   "print_hide": 1,
+   "set_only_once": 1
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Empleado",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Nombre del empleado",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.company",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Empresa",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_periodo",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "period_start",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Periodo: desde",
+   "reqd": 1
+  },
+  {
+   "fieldname": "period_end",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Periodo: hasta",
+   "reqd": 1
+  },
+  {
+   "description": "Opcional. Limita la consolidación a un turno; vacío = todos los turnos del empleado.",
+   "fieldname": "shift_type",
+   "fieldtype": "Link",
+   "label": "Turno (opcional)",
+   "options": "Shift Type"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_parametros",
+   "fieldtype": "Section Break",
+   "label": "Parámetros aplicados (snapshot)"
+  },
+  {
+   "description": "Modo de emparejamiento IN/OUT aplicado por defecto (cuando una jornada no tiene turno).",
+   "fieldname": "applied_check_in_out_type",
+   "fieldtype": "Data",
+   "label": "Modo IN/OUT por defecto",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_parametros",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Estrategia de cálculo de horas aplicada por defecto.",
+   "fieldname": "applied_calc_type",
+   "fieldtype": "Data",
+   "label": "Cálculo de horas por defecto",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_totales",
+   "fieldtype": "Section Break",
+   "label": "Totales"
+  },
+  {
+   "fieldname": "total_native_hours",
+   "fieldtype": "Float",
+   "label": "Total horas nativas",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_computed_hours",
+   "fieldtype": "Float",
+   "label": "Total horas reconocidas",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_recognized_minutes",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Total minutos reconocidos",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_totales",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "days_complete",
+   "fieldtype": "Int",
+   "label": "Jornadas completas",
+   "read_only": 1
+  },
+  {
+   "fieldname": "days_open",
+   "fieldtype": "Int",
+   "label": "Jornadas abiertas",
+   "read_only": 1
+  },
+  {
+   "fieldname": "days_incomplete",
+   "fieldtype": "Int",
+   "label": "Jornadas incompletas",
+   "read_only": 1
+  },
+  {
+   "fieldname": "days_no_checkin",
+   "fieldtype": "Int",
+   "label": "Días sin marcajes",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_detalle",
+   "fieldtype": "Section Break",
+   "label": "Detalle diario"
+  },
+  {
+   "fieldname": "days",
+   "fieldtype": "Table",
+   "label": "Jornadas",
+   "options": "MX Attendance Summary Day",
+   "read_only": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Enmienda de",
+   "no_copy": 1,
+   "options": "MX Attendance Summary",
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-11-22 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HRMS Mexico",
+ "name": "MX Attendance Summary",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR User",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "employee_name"
+}
