@@ -1,39 +1,57 @@
 {
  "actions": [],
  "allow_rename": 0,
+ "autoname": "field:company",
  "creation": "2026-11-23 00:00:00.000000",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "company",
   "section_alertas",
   "alerta_activa",
   "tolerancia_minutos",
   "column_break_dest",
-  "destinatario_adicional",
   "responsable_rrhh",
-  "usuario_designado",
+  "notificar_supervisor",
+  "notificar_usuario_adicional",
+  "usuario_adicional",
+  "section_plantillas",
+  "plantilla_aviso",
+  "column_break_plantillas",
+  "plantilla_escalamiento",
   "section_escalamiento",
   "escalamiento_activo",
   "horas_escalamiento",
   "column_break_esc",
-  "escalar_a",
+  "escalar_usuario_adicional",
   "usuario_escalamiento"
  ],
  "fields": [
+  {
+   "description": "Empresa a la que aplica esta configuración de alertas. Una configuración por empresa (sin duplicados).",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Empresa",
+   "options": "Company",
+   "reqd": 1,
+   "unique": 1
+  },
   {
    "fieldname": "section_alertas",
    "fieldtype": "Section Break",
    "label": "Alertas por jornada abierta (salida olvidada)"
   },
   {
-   "default": "0",
+   "default": "1",
    "description": "Activa la detección y aviso de jornadas con entrada sin salida tras el fin de turno.",
    "fieldname": "alerta_activa",
    "fieldtype": "Check",
    "label": "Alertas activas"
   },
   {
-   "default": "120",
+   "default": "15",
    "description": "Minutos de tolerancia tras el fin del turno antes de avisar.",
    "fieldname": "tolerancia_minutos",
    "fieldtype": "Int",
@@ -44,25 +62,57 @@
    "fieldtype": "Column Break"
   },
   {
-   "default": "Ninguno",
-   "fieldname": "destinatario_adicional",
-   "fieldtype": "Select",
-   "label": "Destinatario adicional del aviso",
-   "options": "Ninguno\nSupervisor (Reports To)\nResponsable de RR. HH.\nUsuario designado"
-  },
-  {
-   "depends_on": "eval:doc.destinatario_adicional==\"Responsable de RR. HH.\" || doc.escalar_a==\"Responsable de RR. HH.\"",
+   "description": "Usuario de ESTA empresa que recibe SIEMPRE todas las alertas (avisos y escalamientos). Obligatorio para poder enviar alertas.",
    "fieldname": "responsable_rrhh",
    "fieldtype": "Link",
-   "label": "Responsable de RR. HH.",
+   "label": "Responsable de RR. HH. (de la empresa)",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "description": "Avisar también al supervisor del empleado (campo Reports To). Si el empleado no tiene supervisor, se omite sin bloquear las demás notificaciones.",
+   "fieldname": "notificar_supervisor",
+   "fieldtype": "Check",
+   "label": "Notificar al supervisor (Reports To)"
+  },
+  {
+   "default": "0",
+   "fieldname": "notificar_usuario_adicional",
+   "fieldtype": "Check",
+   "label": "Notificar a un usuario adicional"
+  },
+  {
+   "depends_on": "eval:doc.notificar_usuario_adicional",
+   "fieldname": "usuario_adicional",
+   "fieldtype": "Link",
+   "label": "Usuario adicional (aviso)",
+   "mandatory_depends_on": "eval:doc.notificar_usuario_adicional",
    "options": "User"
   },
   {
-   "depends_on": "eval:doc.destinatario_adicional==\"Usuario designado\"",
-   "fieldname": "usuario_designado",
+   "collapsible": 1,
+   "fieldname": "section_plantillas",
+   "fieldtype": "Section Break",
+   "label": "Plantillas de notificación (opcional)"
+  },
+  {
+   "description": "Email Template para el aviso inicial. Vacío = plantilla por defecto del sistema.",
+   "fieldname": "plantilla_aviso",
    "fieldtype": "Link",
-   "label": "Usuario designado (aviso)",
-   "options": "User"
+   "label": "Plantilla — aviso inicial",
+   "options": "Email Template"
+  },
+  {
+   "fieldname": "column_break_plantillas",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Email Template para el escalamiento. Vacío = plantilla por defecto del sistema.",
+   "fieldname": "plantilla_escalamiento",
+   "fieldtype": "Link",
+   "label": "Plantilla — escalamiento",
+   "options": "Email Template"
   },
   {
    "fieldname": "section_escalamiento",
@@ -71,14 +121,15 @@
   },
   {
    "default": "0",
-   "description": "Si la incidencia sigue sin atenderse, notifica al responsable.",
+   "description": "Si la incidencia sigue sin atenderse, notifica (de nuevo) al responsable de RR. HH. y a los destinatarios adicionales de escalamiento.",
    "fieldname": "escalamiento_activo",
    "fieldtype": "Check",
    "label": "Escalamiento activo"
   },
   {
    "default": "4",
-   "description": "Horas tras el primer aviso, sin resolución ni regularización, para escalar.",
+   "depends_on": "eval:doc.escalamiento_activo",
+   "description": "Horas tras el fin de turno + tolerancia, sin resolución ni regularización, para escalar.",
    "fieldname": "horas_escalamiento",
    "fieldtype": "Int",
    "label": "Horas para escalar"
@@ -88,23 +139,23 @@
    "fieldtype": "Column Break"
   },
   {
-   "default": "Supervisor (Reports To)",
-   "fieldname": "escalar_a",
-   "fieldtype": "Select",
-   "label": "Escalar a",
-   "options": "Supervisor (Reports To)\nResponsable de RR. HH.\nUsuario designado"
+   "default": "0",
+   "depends_on": "eval:doc.escalamiento_activo",
+   "fieldname": "escalar_usuario_adicional",
+   "fieldtype": "Check",
+   "label": "Escalar a un usuario adicional"
   },
   {
-   "depends_on": "eval:doc.escalar_a==\"Usuario designado\"",
+   "depends_on": "eval:doc.escalamiento_activo && doc.escalar_usuario_adicional",
    "fieldname": "usuario_escalamiento",
    "fieldtype": "Link",
-   "label": "Usuario designado (escalamiento)",
+   "label": "Usuario adicional (escalamiento)",
+   "mandatory_depends_on": "eval:doc.escalamiento_activo && doc.escalar_usuario_adicional",
    "options": "User"
   }
  ],
- "issingle": 1,
  "links": [],
- "modified": "2026-11-23 00:00:00.000000",
+ "modified": "2026-11-23 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "HRMS Mexico",
  "name": "MX Attendance Settings",
@@ -112,18 +163,24 @@
  "permissions": [
   {
    "create": 1,
+   "delete": 1,
    "email": 1,
+   "export": 1,
    "print": 1,
    "read": 1,
+   "report": 1,
    "role": "System Manager",
    "share": 1,
    "write": 1
   },
   {
    "create": 1,
+   "delete": 1,
    "email": 1,
+   "export": 1,
    "print": 1,
    "read": 1,
+   "report": 1,
    "role": "HR Manager",
    "share": 1,
    "write": 1
@@ -131,5 +188,6 @@
  ],
  "sort_field": "modified",
  "sort_order": "DESC",
- "states": []
+ "states": [],
+ "title_field": "company"
 }

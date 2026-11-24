@@ -40,7 +40,7 @@
 ### Etapa 1 — Fundamentos y controles
 - **Objetivo:** configuración, roles/permisos, **protección del marcaje original** y trazabilidad base.
 - **Nativo:** roles HR, `Employee Checkin`, `Shift Type`, permisos Frappe.
-- **Propio:** `MX Attendance Settings` (Single) para parámetros; Custom Fields de origen/trazabilidad en `Employee Checkin`; **guard de inmutabilidad de la evidencia** (`set_only_once` en `employee`/`time`/`log_type` + `validate`/`on_trash` + retiro de `delete`/`write`/`import` a roles operativos, conservando `create` para la PWA); rol MX de operación. **Importante:** la inmutabilidad protege la **evidencia** (`employee`, `time`, `log_type`) y el borrado, **no** los campos técnicos que HRMS actualiza (`attendance`, `skip_auto_attendance`, turno). Ver ADR-0002.
+- **Propio:** `MX Attendance Settings` (una configuración por empresa, `company` único) para parámetros; Custom Fields de origen/trazabilidad en `Employee Checkin`; **guard de inmutabilidad de la evidencia** (`set_only_once` en `employee`/`time`/`log_type` + `validate`/`on_trash` + retiro de `delete`/`write`/`import` a roles operativos, conservando `create` para la PWA); rol MX de operación. **Importante:** la inmutabilidad protege la **evidencia** (`employee`, `time`, `log_type`) y el borrado, **no** los campos técnicos que HRMS actualiza (`attendance`, `skip_auto_attendance`, turno). Ver ADR-0002.
 - **Depende de:** —
 - **Criterios de aceptación:**
   - Los campos de evidencia (`employee`, `time`, `log_type`) de un `Employee Checkin` creado **no** pueden modificarse por UI/API, **ni** por HR Manager/System Manager; el documento **no** puede eliminarse por flujos operativos.
@@ -79,7 +79,7 @@
 
 - **Objetivo:** solicitudes, justificaciones, aprobaciones y **conservación de evidencia**.
 - **Nativo:** `Attendance Request` (una fecha por solicitud) para regularización/omisiones; `Leave Application` (ausencias); `Overtime Slip` (horas extra); workflow de aprobación nativo.
-- **Propio:** Custom Fields en `Attendance Request` (motivo/categoría MX, evidencia, autorizador); vínculo de la corrección aprobada con el `MX Attendance Summary`; **alertas por jornada abierta fuera de horario (F01)** vía `scheduler_events` nativo + parámetros en `MX Attendance Settings` (Single). **Sin** DocType de corrección propio. **Sin** OUT ficticios ni modificación de evidencia.
+- **Propio:** Custom Fields en `Attendance Request` (motivo/categoría MX, evidencia, autorizador); vínculo de la corrección aprobada con el `MX Attendance Summary`; **alertas por jornada abierta fuera de horario (F01)** vía `scheduler_events` nativo + parámetros en `MX Attendance Settings` (una por empresa). **Sin** DocType de corrección propio. **Sin** OUT ficticios ni modificación de evidencia.
 - **Depende de:** Etapas 1, 2.
 - **Criterios de aceptación:**
   - Una omisión/error se corrige vía `Attendance Request` aprobado **sin** modificar el checkin original.
@@ -156,6 +156,16 @@ viabilidad: investigación del nativo HRMS v16 (frontend PWA `apps/hrms/frontend
 | F04 | Mostrar/ocultar enlaces rápidos individualmente | **Decidido: no implementar** | Los *quick links* están hardcodeados en el frontend HRMS. Decisión: **conservar todos los enlaces nativos**, sin configuración de visibilidad y sin intervenir el núcleo. |
 | F05 | Regularización mediante Attendance Request | Etapa 3 | Fuera de alcance de Etapa 2 (seam listo en `recognition.py`). |
 | F06 | «Solicitar un turno» | **Decidido: mantener visible** | Permanece visible; su utilización depende de los permisos del usuario. No se modifica el frontend ni las traducciones. |
+| F07 | Alertas activas por defecto | **Hecho** | `MX Attendance Settings.alerta_activa` default = 1. |
+| F08 | Tolerancia predeterminada 15 min | **Hecho** | `tolerancia_minutos` default = 15 (antes 120). |
+| F09 | Dependientes de escalamiento se ocultan al desactivar | **Hecho** | `horas_escalamiento`, `escalar_usuario_adicional`, `usuario_escalamiento` con `depends_on eval:doc.escalamiento_activo`. |
+| F10 | Responsable de RR. HH. obligatorio por empresa | **Hecho** | `responsable_rrhh` (`reqd=1`) **por empresa**, recibe SIEMPRE todas las alertas (aviso y escalamiento) de su empresa. |
+| F14 | Configuración de alertas **por empresa** (no global) | **Hecho** | `MX Attendance Settings` dejó de ser *Single*: ahora es una configuración por `Company` (`autoname field:company`, único). Resolución por `Employee.company`; nunca se usan destinatarios de otra empresa; si falta config de una empresa, se registra y se omite sin detener el scheduler. HRMS v16 verificado multiempresa (Employee/Attendance/Attendance Request/Shift Assignment con `company` reqd). |
+| F15 | Notificaciones con contenido útil + plantillas editables | **Hecho** | Dos `Email Template` por empresa (`plantilla_aviso`, `plantilla_escalamiento`), con Jinja (empleado/número/empresa/IN/turno/salida esperada/motivo/instrucción). Defaults creados por **patch create-if-absent** (las migraciones **no** sobrescriben ediciones de RR.HH.); *fallback* embebido si faltara la plantilla. |
+| F16 | Dedup/escalamiento sin ToDo (control estructurado) | **Hecho** | **Eliminada** la creación de ToDo. Control `MX Attendance Alert` (1 fila por marcaje, `employee_checkin` **único**) con `aviso_enviado_el`/`escalamiento_enviado_el`. Unicidad BD + `for_update` → seguro ante corridas concurrentes; envío + sello en la misma transacción → reintento limpio ante interrupción; `Notification Log` solo para entrega. |
+| F11 | Eliminar selectores excluyentes | **Hecho** | Removidos `destinatario_adicional` y `escalar_a`; destinatarios ahora por casillas no excluyentes (supervisor / usuario adicional). |
+| F12 | Supervisor opcional vía Reports To; omitir si no hay | **Hecho** | `notificar_supervisor` (Check) → `Employee.reports_to`; sin Reports To se omite sin bloquear las demás. |
+| F13 | Evitar notificaciones duplicadas por usuario | **Hecho** | Destinatarios resueltos como conjunto de `User` (dedup): un mismo usuario con varios roles recibe una sola notificación. Guard: sin `responsable_rrhh` el scheduler no envía ni falla. |
 
 **Limitación central (frontend HRMS):** la pantalla de autoservicio es una SPA Vue compilada que HRMS
 sirve en `/hrms`; sus accesos (*quick links*) y la lógica IN/OUT no son configurables ni sobrescribibles
@@ -187,7 +197,7 @@ configurable**. El marcaje original queda intacto; la alerta es informativa y co
 descanso / sin turno asignado (no hay `shift_end` de referencia). Turnos nocturnos: se usa el `shift_end`
 real (cruza medianoche), por lo que la alerta ocurre tras el fin real del turno + tolerancia.
 
-**Parámetros mínimos (en `MX Attendance Settings`, Single — previsto; aún no creado):**
+**Parámetros mínimos (en `MX Attendance Settings`, una configuración por empresa):**
 `alerta_activa` (on/off) · `tolerancia_minutos` (p. ej. 120) · `frecuencia_revision` (hourly) ·
 `destinatario_adicional` (ninguno | supervisor `Reports To` | responsable RR. HH. | usuario) ·
 `escalamiento_activo` (on/off) · `horas_escalamiento` (p. ej. 4) · `escalar_a` (supervisor | RR. HH. | usuario).
@@ -195,8 +205,9 @@ real (cruza medianoche), por lo que la alerta ocurre tras el fin real del turno 
 **Componentes nativos reutilizables:** `scheduler_events` (hook `hourly`) para la detección; **Notification
 Log** / correo (`frappe.sendmail`/Notification) para el aviso in-app + email; **ToDo / `assign_to`** para
 dejar la jornada abierta asignada y rastreable (y medir "no atendida"); `Employee.reports_to` para el
-supervisor; dedupe con un identificador idempotente por jornada. **Sin DocTypes nuevos salvo** el Single
-`MX Attendance Settings` (parámetros) cuando se implemente.
+supervisor; dedupe con un identificador idempotente por jornada. **Sin DocTypes nuevos salvo**
+`MX Attendance Settings` (parámetros, **una configuración por empresa** — `company` único; resolución por
+`Employee.company`, sin cruzar empresas).
 
 ## Mapa ADR → etapa
 
