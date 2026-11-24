@@ -200,12 +200,10 @@ def _render_message(template_name, journey, kind):
 		et = frappe.get_cached_doc("Email Template", template_name)
 		# La plantilla es un Email Template administrado solo por System Manager/HR Manager (no entrada
 		# de usuario), el mismo patrón que usa Frappe nativo para Email Templates → no es SSTI explotable.
-		subject = frappe.render_template(
-			et.subject or "", ctx
-		)  # nosemgrep: frappe-semgrep-rules.rules.security.frappe-ssti
-		body = frappe.render_template(
-			et.response_html or et.response or "", ctx
-		)  # nosemgrep: frappe-semgrep-rules.rules.security.frappe-ssti
+		subject_tpl = et.subject or ""
+		body_tpl = et.response_html or et.response or ""
+		subject = frappe.render_template(subject_tpl, ctx)  # nosemgrep
+		body = frappe.render_template(body_tpl, ctx)  # nosemgrep
 		if subject or body:
 			return subject, body
 	return _fallback(ctx, kind)
